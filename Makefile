@@ -1,8 +1,4 @@
-#
-#
-#
-
-APPBAUD  = 2000000
+APPBAUD  = 115200
 
 PROJECT  = DFU-Bootloader
 
@@ -22,9 +18,6 @@ OSRC     =
 
 NXPSRC   = $(shell find CMSISv2p00_LPC17xx/ LPC17xxLib/ -name '*.c')
 NXPO     = $(patsubst %.c,$(OUTDIR)/%.o,$(notdir $(NXPSRC))) $(OUTDIR)/system_LPC17xx.o
-
-FATFSSRC = $(shell find fatfs/ -name '*.c')
-FATFSO   = $(patsubst %.c,$(OUTDIR)/%.o,$(notdir $(FATFSSRC)))
 
 CHIP     = lpc1769
 MCU      = cortex-m3
@@ -51,7 +44,7 @@ RM       = rm -f
 OPTIMIZE = s
 
 #DEBUG_MESSAGES
-CDEFS    = MAX_URI_LENGTH=512 __LPC17XX__ USB_DEVICE_ONLY APPBAUD=$(APPBAUD)
+CDEFS    = DEBUG_MESSAGES MAX_URI_LENGTH=512 __LPC17XX__ USB_DEVICE_ONLY APPBAUD=$(APPBAUD)
 
 FLAGS    = -O$(OPTIMIZE) -mcpu=$(MCU) -mthumb -mthumb-interwork -mlong-calls -ffunction-sections -fdata-sections -Wall -g -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
 FLAGS   += $(patsubst %,-I%,$(INC))
@@ -72,7 +65,7 @@ VPATH    = . $(patsubst %/inc,%/src,$(INC)) $(dir $(NXPSRC)) $(dir $(USBSRC)) $(
 
 .PRECIOUS: $(OBJ)
 
-all: $(OUTDIR) $(OUTDIR)/nxp.ar $(OUTDIR)/fatfs.ar $(OUTDIR)/$(PROJECT).elf $(OUTDIR)/$(PROJECT).bin $(OUTDIR)/$(PROJECT).hex size
+all: $(OUTDIR) $(OUTDIR)/nxp.ar $(OUTDIR)/$(PROJECT).elf $(OUTDIR)/$(PROJECT).bin $(OUTDIR)/$(PROJECT).hex size
 
 clean:
 	@echo "  RM    " ".o"
@@ -80,9 +73,6 @@ clean:
 
 	@echo "  RM    " "nxp"
 	@$(RM) $(NXPO) $(NXPO:%.o=%.lst) $(OUTDIR)/nxp.ar
-
-	@echo "  RM    " "fatfs"
-	@$(RM) $(FATFSO) $(FATFSO:%.o=%.lst) $(OUTDIR)/fatfs.ar
 
 	@echo "  RM    " "build/"$(PROJECT)".*"
 	@$(RM) $(OUTDIR)/$(PROJECT).bin $(OUTDIR)/$(PROJECT).hex $(OUTDIR)/$(PROJECT).elf $(OUTDIR)/$(PROJECT).map
@@ -124,7 +114,7 @@ $(OUTDIR)/%.sym: $(OUTDIR)/%.elf
 	@echo "  SYM   " $@
 	@$(OBJDUMP) -t $< | perl -ne 'BEGIN { printf "%6s  %-40s %s\n", "ADDR","NAME","SIZE"; } /([0-9a-f]+)\s+(\w+)\s+O\s+\.(bss|data)\s+([0-9a-f]+)\s+(\w+)/ && printf "0x%04x  %-40s +%d\n", eval("0x$$1") & 0xFFFF, $$5, eval("0x$$4")' | sort -k1 > $@
 
-$(OUTDIR)/%.elf: $(OBJ) $(OUTDIR)/nxp.ar $(OUTDIR)/fatfs.ar
+$(OUTDIR)/%.elf: $(OBJ) $(OUTDIR)/nxp.ar
 	@echo "  LINK  " $@
 	@$(LINK) $(OSRC) -Wl,-Map=$(@:.elf=.map) -o $@ $^ $(LDFLAGS)
 
@@ -142,8 +132,4 @@ $(OUTDIR)/%.o: %.S Makefile
 
 $(OUTDIR)/nxp.ar: $(NXPO)
 	@echo "  AR    " "  nxp/"$@
-	@$(AR) cru $@ $^
-
-$(OUTDIR)/fatfs.ar: $(FATFSO)
-	@echo "  AR    " "fatfs/"$@
 	@$(AR) cru $@ $^
