@@ -3,7 +3,6 @@ APPBAUD  = 115200
 PROJECT  = DFU-Bootloader
 
 CSRC     = $(wildcard *.c)
-CXXSRC   = $(wildcard *.cpp)
 ASRC     = $(wildcard *.S)
 
 SUBDIRS  = Drivers Core
@@ -26,7 +25,6 @@ ARCH     = arm-none-eabi
 PREFIX   = $(ARCH)-
 
 CC       = $(PREFIX)gcc
-# CXX      = $(PREFIX)g++
 OBJCOPY  = $(PREFIX)objcopy
 OBJDUMP  = $(PREFIX)objdump
 AR       = $(PREFIX)ar
@@ -57,7 +55,7 @@ LDFLAGS  = $(FLAGS) -Wl,--as-needed,--gc-sections,-e,__cs3_reset_cortex_m,-T,$(C
 LDFLAGS += $(patsubst %,-L%,$(LIBRARIES)) -lc
 LDFLAGS += -Wl,-Map=$(OUTDIR)/$(PROJECT).map
 
-OBJ      = $(patsubst %,$(OUTDIR)/%,$(notdir $(CSRC:.c=.o) $(CXXSRC:.cpp=.o) $(ASRC:.S=.o)))
+OBJ      = $(patsubst %,$(OUTDIR)/%,$(notdir $(CSRC:.c=.o) $(ASRC:.S=.o)))
 
 VPATH    = . $(patsubst %/inc,%/src,$(INC)) $(dir $(NXPSRC)) $(dir $(USBSRC)) $(dir $(UIPSRC)) $(dir $(LWIPSRC))
 
@@ -121,10 +119,6 @@ $(OUTDIR)/%.elf: $(OBJ) $(OUTDIR)/nxp.ar
 $(OUTDIR)/%.o: %.c Makefile
 	@echo "  CC    " $@
 	@$(CC) $(CFLAGS) -Wa,-adhlns=$(@:.o=.lst) -c -o $@ $<
-
-# $(OUTDIR)/%.o: %.cpp
-# 	@echo "  CXX   " $@
-# 	@$(CXX) $(CXXFLAGS) -Wa,-adhlns=$(@:.o=.lst) -c -o $@ $<
 
 $(OUTDIR)/%.o: %.S Makefile
 	@echo "  AS    " $@
